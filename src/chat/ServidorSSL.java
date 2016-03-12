@@ -28,7 +28,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-public class ServidorSSL implements Runnable {
+public class ServidorSSL {
 	private int puerto = 8080;
 	private SSLServerSocket s;
 	private Socket sslc;
@@ -87,8 +87,8 @@ public class ServidorSSL implements Runnable {
 			((HiloCliente) new HiloCliente(sslc)).run();
 			System.out.println("Ejecutando hilo cliente para envío y recepción de mensajes.");
 			
-			this.run();
-			System.out.println("Listener de lo que dice cliente ON...");
+			leer();
+
 
 		} catch (NoSuchAlgorithmException | CertificateException | IOException | KeyStoreException
 				| UnrecoverableKeyException | KeyManagementException e) {
@@ -103,18 +103,26 @@ public class ServidorSSL implements Runnable {
 		ps.close();
 		System.out.println("Mensaje de servidor enviado...");
 	}
-
-	@Override
-	public void run() {
-		try {
-			String mensaje;
-			while ((mensaje = in.readLine()) != null) {
-				System.out.println("Leyendo...");
-				System.out.println(mensaje);
+	
+	public  void leer (){
+		Thread lectura = new Thread(){
+			@Override
+			public void run() {
+				try {
+					String mensaje;
+					while((mensaje = in.readLine()) != null) {
+						System.out.println("Leyendo...");
+						System.out.println(mensaje);
+					} 
+						
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		};
+		
+		lectura.start();
 	}
+
 
 }

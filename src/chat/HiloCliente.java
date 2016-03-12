@@ -13,7 +13,7 @@ import javax.swing.JTextPane;
 import javax.swing.JLabel;
 import java.awt.BorderLayout;
 
-public class HiloCliente extends JFrame implements Runnable {
+public class HiloCliente extends Thread{
 	private Socket socket;
 	private PrintStream ps;
 	private BufferedReader in;
@@ -28,6 +28,7 @@ public class HiloCliente extends JFrame implements Runnable {
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
+		
 	}
 
 	private void cerrarSesion() {
@@ -40,12 +41,12 @@ public class HiloCliente extends JFrame implements Runnable {
 	}
 
 	public void enviarMensaje(String mensaje) {
-		ps.print("Servidor dice: " + mensaje);
+		ps.print("Cliente dice: " + mensaje);
 		ps.flush();
 		ps.close();
 		System.out.println("Mensaje de servidor enviado...");
 	}
-
+	
 	@Override
 	public void run() {
 		try {
@@ -53,10 +54,12 @@ public class HiloCliente extends JFrame implements Runnable {
 			while ((mensaje = in.readLine()) != null) {
 				System.out.println("Leyendo...");
 				System.out.println(mensaje);
-			}
+			} 
+				
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
+
 
 }
