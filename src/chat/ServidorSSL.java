@@ -1,11 +1,16 @@
 package chat;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintStream;
 import java.net.Socket;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
@@ -26,9 +31,10 @@ import javax.net.ssl.TrustManagerFactory;
 public class ServidorSSL implements Runnable {
 	private int puerto = 8080;
 	private SSLServerSocket s;
-	private SSLSocket sslc;
-	private ObjectOutputStream oos;
-	private ObjectInputStream ois;
+	private Socket sslc;
+	private PrintStream ps;
+	private BufferedReader in;
+
 
 
 	public ServidorSSL() {
@@ -38,7 +44,7 @@ public class ServidorSSL implements Runnable {
 			// en la terminal con keytool.
 			System.out.println("Añadiendo fichero al objeto KeyStore...");
 			KeyStore ks = KeyStore.getInstance("JKS");
-			ks.load(new FileInputStream("C:\\Users\\David\\workspace\\ChatSSL\\src\\chat\\mySrvKeystore"),
+			ks.load(new FileInputStream("C:\\Users\\David\\workspace\\ChatSSL\\src\\chat\\mySrvKeystore.jks"),
 					"password".toCharArray());
 
 			// Gestionamos la clave de acceso al certificado.
@@ -74,8 +80,8 @@ public class ServidorSSL implements Runnable {
 			sslc = (SSLSocket) s.accept();
 			System.out.println("Socket aceptado");
 			
-			oos = new ObjectOutputStream(sslc.getOutputStream());
-			ois = new ObjectInputStream(sslc.getInputStream());
+			ps = new PrintStream (sslc.getOutputStream());
+			in = new BufferedReader(new InputStreamReader(sslc.getInputStream()));
 			System.out.println("Input y outputs agregados del socket cliente");
 			
 			((HiloCliente) new HiloCliente(sslc)).run();
@@ -92,26 +98,21 @@ public class ServidorSSL implements Runnable {
 	}
 
 	public void enviarMensaje(String mensaje) {
-		try {
-			oos.writeObject("Servidor dice: " + mensaje);
-			oos.flush();
-			oos.close();
-			System.out.println("Mensaje de servidor enviado...");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		ps.print("Servidor dice: " + mensaje);
+		ps.flush();
+		ps.close();
+		System.out.println("Mensaje de servidor enviado...");
 	}
 
 	@Override
 	public void run() {
 		try {
 			String mensaje;
-			if ((mensaje = String.valueOf(ois.readObject())) != null) {
+			while ((mensaje = in.readLine()) != null) {
 				System.out.println("Leyendo...");
 				System.out.println(mensaje);
 			}
-		} catch (ClassNotFoundException | IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}

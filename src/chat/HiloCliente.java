@@ -1,8 +1,11 @@
 package chat;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintStream;
 import java.net.Socket;
 
 import javax.swing.JFrame;
@@ -12,15 +15,15 @@ import java.awt.BorderLayout;
 
 public class HiloCliente extends JFrame implements Runnable {
 	private Socket socket;
-	private ObjectOutputStream oos;
-	private ObjectInputStream ois;
+	private PrintStream ps;
+	private BufferedReader in;
 
 	public HiloCliente(Socket socket) {
 		System.out.println("Creado hilo con un socket.");
 		this.socket = socket;
 		try {
-			oos = new ObjectOutputStream(socket.getOutputStream());
-			ois = new ObjectInputStream(socket.getInputStream());
+			ps = new PrintStream (socket.getOutputStream());
+			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			System.out.println("Streamings creados.");
 		} catch (IOException ex) {
 			ex.printStackTrace();
@@ -37,26 +40,21 @@ public class HiloCliente extends JFrame implements Runnable {
 	}
 
 	public void enviarMensaje(String mensaje) {
-		try {
-			oos.writeObject("Servidor dice: " + mensaje);
-			oos.flush();
-			oos.close();
-			System.out.println("Mensaje de servidor enviado...");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		ps.print("Servidor dice: " + mensaje);
+		ps.flush();
+		ps.close();
+		System.out.println("Mensaje de servidor enviado...");
 	}
 
 	@Override
 	public void run() {
 		try {
 			String mensaje;
-			if ((mensaje = String.valueOf(ois.readObject())) != null) {
+			while ((mensaje = in.readLine()) != null) {
 				System.out.println("Leyendo...");
 				System.out.println(mensaje);
 			}
-		} catch (ClassNotFoundException | IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
