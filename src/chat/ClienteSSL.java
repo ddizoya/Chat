@@ -1,13 +1,10 @@
 package chat;
 
 import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.Socket;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -17,21 +14,19 @@ import java.security.cert.CertificateException;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-public class ServidorSSL {
-	private int puerto = 8080;
-	private SSLServerSocket s;
-	private Socket sslc;
+public class ClienteSSL {
 	private PrintWriter out;
 	private BufferedReader in;
+	private String host = "localhost";
+	private int puerto = 8080;
+	
 
-	public ServidorSSL() {
+	public ClienteSSL() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException, KeyManagementException {
 		try {
 			// Creamos un objeto de tipo KeyStore y le pasamos el fichero con su
 			// clave que previamente hemos creado
@@ -63,22 +58,17 @@ public class ServidorSSL {
 			// Finalmente creamos el servidor SSL mediante el objeto SSL
 			// context.
 
-			SSLServerSocketFactory ssf = sc.getServerSocketFactory();
-			s = (SSLServerSocket) ssf.createServerSocket(puerto);
-			System.out.println("Servidor con puerto de escucha " + puerto + " mediante SSLServerFactory...");
+			SSLSocketFactory sf = sc.getSocketFactory();
+			SSLSocket sslSocket = (SSLSocket) sf.createSocket(host, puerto);
+
+			out = new PrintWriter(sslSocket.getOutputStream(), true);
+			in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
 
 			leer();
-
-		} catch (NoSuchAlgorithmException | CertificateException | IOException | KeyStoreException
-				| UnrecoverableKeyException | KeyManagementException e) {
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
-
-	public void enviarMensaje(String mensaje) {
-		out.println("Servidor dice: " + mensaje);
-		out.flush();
 
 	}
 
@@ -87,14 +77,7 @@ public class ServidorSSL {
 			@Override
 			public void run() {
 				try {
-					sslc = (SSLSocket) s.accept();
-					System.out.println("Socket aceptado");
-
-					out = new PrintWriter(sslc.getOutputStream(), true);
-					in = new BufferedReader(new InputStreamReader(sslc.getInputStream()));
-					System.out.println("Input y outputs agregados del socket cliente");
 					String mensaje;
-					
 					while ((mensaje = in.readLine()) != null) {
 						System.out.println("Leyendo...");
 						System.out.println(mensaje);
@@ -108,5 +91,4 @@ public class ServidorSSL {
 
 		lectura.start();
 	}
-
 }
