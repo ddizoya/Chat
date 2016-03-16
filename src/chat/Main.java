@@ -14,12 +14,7 @@ public class Main {
 	ServidorSSL ser = new ServidorSSL();
 	ClienteSSL cli = new ClienteSSL();
 	System.out.println("Socket cliente aceptado en el servidor...");
-	ser.enviarMensaje("Hola, qué tal server?");
-	ser.enviarMensaje("Hola, qué tal server?");
-	ser.enviarMensaje("Hola, qué tal server?");
-	
 
-	
 }
  
 }
